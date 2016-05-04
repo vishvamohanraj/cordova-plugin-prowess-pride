@@ -1,0 +1,21 @@
+{
+    "version": "0.1",
+    "name": "com.vmr.prowess.pride",
+    "cordova_name": "Prowess Pride",
+    "description": "Prowess Pride",
+    "license": "Apache 2.0",
+    "repo": "",
+    "issue": "",
+    "keywords": [
+        "cordova",
+        "prowess pride",
+		"prowess pride plugin",
+		"prowess pride cordova plugin",
+		"plugin"
+    ],
+    "platforms": [
+        "android",
+    ],
+    "engines": [],
+    "englishdoc": ""
+}
