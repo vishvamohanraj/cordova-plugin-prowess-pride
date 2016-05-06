@@ -16,9 +16,9 @@ public class ActivateLibrary extends CordovaActivity
 	{
 		super.onCreate(savedInstanceState);
 		try{
+			Intent launchIntent = this.getPackageManager().getLaunchIntentForPackage(getApplicationContext().getPackageName());
 			setup=new Setup();
-			IS_Activate = setup.blActivateLibrary(this,R.raw.licencefull_pride_gen);
-			Intent launchIntent = this.getPackageManager().getLaunchIntentForPackage(this.getPackageName());
+			IS_Activate = setup.blActivateLibrary(this,this.getResources().getIdentifier("licencefull_pride_gen", "raw", getApplicationContext().getPackageName()));
 			String className = launchIntent.getComponent().getClassName();
 			Intent intent = new Intent(this,Class.forName(className));
 	        //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

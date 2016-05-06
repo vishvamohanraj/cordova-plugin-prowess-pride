@@ -3,6 +3,9 @@ var ProwessPride={
 	activatePrinterLibrary: function(){
 		exec(null, null, "ProwessPride", "activatePrinterLibrary", []);
 	},
+	isBluetoothConnected: function(fnSuccess, fnError){
+		exec(fnSuccess, fnError, "ProwessPride", "isBluetoothConnected", []);
+	},
 	getBluetoothDevicesList: function(fnSuccess, fnError){
 		exec(fnSuccess, fnError, "ProwessPride", "getBluetoothDevicesList", []);
 	},

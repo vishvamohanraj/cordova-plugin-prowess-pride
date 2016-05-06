@@ -20,6 +20,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
@@ -39,6 +40,7 @@ public class ProwessPride extends CordovaPlugin {
 	public static JSONArray jsonDeviceArray;
 	public static boolean bTConnected = false;
 	public static List<BluetoothDevice> mBTDevices;
+	public static BluetoothDevice mBTDeviceConnected;
 	public final static String UUID_STR = "00001101-0000-1000-8000-00805F9B34FB";
 	private ProgressDialog mProgressDlg;
 	/**
@@ -60,6 +62,10 @@ public class ProwessPride extends CordovaPlugin {
 		final Context context=this.cordova.getActivity().getApplicationContext();
 		if (action.equals("activatePrinterLibrary")) {
 			this.activatePrinterLibrary(context);
+			return true;
+		}
+		else if (action.equals("isBluetoothConnected")) {
+			this.isBluetoothConnected(callbackContext);
 			return true;
 		}
 		else if (action.equals("getBluetoothDevicesList")) {
@@ -96,6 +102,32 @@ public class ProwessPride extends CordovaPlugin {
 		}
 	}
 	
+	public void isBluetoothConnected(final CallbackContext callbackContext)
+	{
+		cordova.getActivity().runOnUiThread(new Runnable() {
+	        @Override
+	        public void run() {
+	        	try{
+					if (mBT==null ||!mBT.isEnabled())
+					{
+						mbsSocket=null;
+						ptrGen=null;
+						mBTDeviceConnected=null;
+						callbackContext.success(Boolean.toString(Boolean.FALSE));
+					}
+	        		else if(mbsSocket!=null)
+	        			callbackContext.success(Boolean.toString(mbsSocket.isConnected()));
+	        		else
+	        			callbackContext.success(Boolean.toString(Boolean.FALSE));
+	        	}
+	        	catch(Exception e)
+	        	{
+	        		callbackContext.error("Bluetooth device not connected");
+	        	}
+	        }
+	    });
+	}
+	
 	public void checkBluetoothAdapter(CallbackContext callbackContext)
 	{
 		if (mBT == null) {
@@ -103,6 +135,11 @@ public class ProwessPride extends CordovaPlugin {
 			return;
 		}
 		if (!mBT.isEnabled()) {
+			mbsSocket=null;
+			ptrGen=null;
+			mBTDeviceConnected=null;
+			jsonDeviceArray = new JSONArray();
+	    	mBTDevices=new ArrayList<BluetoothDevice>();
 			Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 			cordova.getActivity().startActivityForResult(enableBluetooth, 0);
 		}
@@ -135,76 +172,41 @@ public class ProwessPride extends CordovaPlugin {
 	public void getBluetoothDevicesList(final CallbackContext callbackContext)
 	{
 		cordova.getActivity().runOnUiThread(new Runnable() {
-			
 	        @Override
 	        public void run() {
 	    		try {
 	    			checkBluetoothAdapter(callbackContext);
+					Thread.sleep(5000);
 	    			jsonDeviceArray = new JSONArray();
 	    			mBTDevices=new ArrayList<BluetoothDevice>();
-	    			if(mBT.isEnabled() && (mbsSocket==null || !mbsSocket.isConnected())){
-	    				/*mProgressDlg = new ProgressDialog(cordova.getActivity());
-	    				mProgressDlg.setMessage("Scanning...");
-	    				mProgressDlg.setCancelable(false);
-	    				mProgressDlg.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
-	    				    @Override
-	    				    public void onClick(DialogInterface dialog, int which) {
-	    				        dialog.dismiss();
-	    				        mBT.cancelDiscovery();
-	    				    }
-	    				});
-	    				Context context = (Context)cordova.getActivity().getApplicationContext();
-	    				
-	    				 // Register for broadcasts when a device is discovered
-	    		       IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-	    		       context.registerReceiver(mReceiver, filter);
-	    		       
-	    		       
-	    		       // Register for broadcasts when discovery starts
-	    		       filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-	    		       context.registerReceiver(mReceiver, filter);
-
-	    		       
-	    		       // Register for broadcasts when discovery has finished
-	    		       filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-	    		       context.registerReceiver(mReceiver, filter);  
-	    		       
-	    		       Intent discoverableIntent = new
-	    		    		   Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-	    		    		   discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-	    		    		   cordova.getActivity().startActivity(discoverableIntent);
-	    		              
-	    		       // Register for broadcasts when connectivity state changes
-	    		       filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-	    		       context.registerReceiver(mReceiver, filter);  
-	    		       Log.v("Prowess Pride Printer  ", "Intent Fileter Start");
-	    		       mBT.startDiscovery();
-	    		       Log.v("Prowess Pride Printer  ", "After Discovery");
-	    		       Thread.sleep(5000);*/
-		    			Set<BluetoothDevice> pairedDevices = mBT.getBondedDevices();
-		    			if (pairedDevices.size() > 0) {
-		    				for (BluetoothDevice device : pairedDevices) {
-		    					jsonDeviceArray.put(device.getName());
-		    					mBTDevices.add(device);
-		    				}
-		    			}
-		    			if(jsonDeviceArray.length()>0){
-		    				callbackContext.success(jsonDeviceArray);
-		    				//cordova.getActivity().getBaseContext().unregisterReceiver(mReceiver);
-		    			}
-		    			else {
-		    				callbackContext.error("No Bluetooth Device Found");
-		    				//cordova.getActivity().getBaseContext().unregisterReceiver(mReceiver);
-		    			}
+	    			if(mBT.isEnabled()){
+						if(mbsSocket==null || !mbsSocket.isConnected())
+						{
+							Set<BluetoothDevice> pairedDevices = mBT.getBondedDevices();
+							if (pairedDevices.size() > 0) {
+								for (BluetoothDevice device : pairedDevices) {
+									jsonDeviceArray.put(device.getName());
+									mBTDevices.add(device);
+								}
+							}
+							if(jsonDeviceArray.length()>0){
+								callbackContext.success(jsonDeviceArray);
+							}
+							else {
+								callbackContext.error("No Bluetooth Device Found");
+							}
+						}
+						else
+						{
+							callbackContext.error("Bluetooth already connected or in use");
+						}
 	    			}
 	    			else
 	    			{
-	    				callbackContext.error("Bluetooth not enabled");
+	    				callbackContext.error("Bluetooth adapter not enabled");
 	    			}
 	    		} catch (Exception e) {
-	    			e.printStackTrace();
-	    			callbackContext.error(e.getMessage());
-	    			//cordova.getActivity().getBaseContext().unregisterReceiver(mReceiver);
+	    			callbackContext.error("Unable to find bluetooth devices");
 	    		}
 	        }
 	    });
@@ -224,49 +226,56 @@ public class ProwessPride extends CordovaPlugin {
 	        public void run() {
 	        	try {
 	        		checkBluetoothAdapter(callbackContext);
-	        		if(mBT.isEnabled() && (mbsSocket==null || !mbsSocket.isConnected()))
-	    			{
-	        			if(mBTDevices!=null && mBTDevices.size()>0)
-	        			{
-	        				for (BluetoothDevice device : mBTDevices) {
-		    					if (device.getName().equalsIgnoreCase(deviceName)) {
-		    						boolean bondDevice=false;
-		        					if(BluetoothDevice.BOND_BONDED==device.getBondState())
-		        					{
-		        						bondDevice=true;
-		        					}
-		        					else
-		        					{
-		        						bondDevice=createBond(device);
-		        					}
-		        					if(bondDevice)
-		        					{
-			    						final UUID uuidComm = UUID.fromString(UUID_STR);
-			    						mbsSocket = device.createRfcommSocketToServiceRecord(uuidComm);
-			    						Thread.sleep(2000);
-			    						mbsSocket.connect();
-			    						Thread.sleep(2000);
-			    						mosOut = mbsSocket.getOutputStream();//Get global output stream object
-			    						misIn = mbsSocket.getInputStream();
-			    						callbackContext.success("Bluetooth device successfully connected");
-			    						bTConnected=true;
-			    						return;
-		        					}
-		        					else
-		        					{
-		        						callbackContext.success("Bluetooth device not paired");
-		        					}
-		    					}
-		    				}
-	        			}
+	        		if(mBT.isEnabled()){
+						if(mbsSocket==null || !mbsSocket.isConnected())
+						{
+							if(mBTDevices!=null && mBTDevices.size()>0)
+							{
+								for (BluetoothDevice device : mBTDevices) {
+									if (device.getName().equalsIgnoreCase(deviceName)) {
+										boolean bondDevice=false;
+										mBTDeviceConnected=device;
+										if(BluetoothDevice.BOND_BONDED==mBTDeviceConnected.getBondState()){
+											bondDevice=true;
+										}
+										else{
+											bondDevice=createBond(mBTDeviceConnected);
+										}
+										if(bondDevice){
+											final UUID uuidComm = UUID.fromString(UUID_STR);
+											mbsSocket = mBTDeviceConnected.createRfcommSocketToServiceRecord(uuidComm);
+											Thread.sleep(3000);
+											mbsSocket.connect();
+											Thread.sleep(3000);
+											mosOut = mbsSocket.getOutputStream();//Get global output stream object
+											misIn = mbsSocket.getInputStream();
+											callbackContext.success("Bluetooth device successfully connected");
+											bTConnected=true;
+											return;
+										}
+										else{
+											mBTDeviceConnected=null;
+											callbackContext.error("Unable to connect with bluetooth device");
+										}
+									}
+									else{
+										callbackContext.error("Selected device not found now");
+									}
+								}
+							}
+						}
+						else
+						{
+							callbackContext.error("Bluetooth already connected or in use");
+						}
 	    			}
 	    			else
 	    			{
-	    				callbackContext.error("Bluetooth not enabled");
+	    				callbackContext.error("Bluetooth adapter not enabled");
 	    			}
 	    		} catch (Exception e) {
 	    			e.printStackTrace();
-	    			callbackContext.error(e.getMessage());
+	    			callbackContext.error("Unable to connect with bluetooth device");
 	    		}
 	        }
 	    });
@@ -285,10 +294,20 @@ public class ProwessPride extends CordovaPlugin {
 	        			callbackContext.error("Printer library not activated");
 	        			return;
 	        		}
-	        		if(!mbsSocket.isConnected())
-	        		{
-	        			callbackContext.error("Printer not connected");
-	        		}
+					if (mBT == null) {
+						callbackContext.error("Bluetooth adapter not available");
+						return;
+					}
+					if (!mBT.isEnabled()) {
+						mbsSocket=null;
+						ptrGen=null;
+						mBTDeviceConnected=null;
+						jsonDeviceArray = new JSONArray();
+						mBTDevices=new ArrayList<BluetoothDevice>();
+						Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+						cordova.getActivity().startActivityForResult(enableBluetooth, 0);
+						Thread.sleep(3000);
+					}	        		
 	        		ptrGen = new Printer_GEN(ActivateLibrary.setup, mosOut, misIn);
 	        		if(ptrGen!=null)
 	    			{
@@ -307,12 +326,10 @@ public class ProwessPride extends CordovaPlugin {
 	    			}
 	    			else
 	    			{
-	    				Toast.makeText(cordova.getActivity().getApplicationContext(), "Printer not connected", Toast.LENGTH_SHORT).show();
 	    				callbackContext.error("Printer not connected");
 	    			}
 	    		} catch (Exception e) {
 	    			e.printStackTrace();
-	    			callbackContext.error(e.getMessage());
 	    			callbackContext.error("Printer not connected");
 	    		}
 	        }
@@ -333,10 +350,16 @@ public class ProwessPride extends CordovaPlugin {
 			msgReturnByPrinter="Printer at improper voltage";
 		} else if (iRetVal == Printer_GEN.FAILURE) {
 			msgReturnByPrinter="Printing failed";
+			mbsSocket=null;
+			ptrGen=null;
+			mBTDeviceConnected=null;
 		} else if (iRetVal == Printer_GEN.PARAM_ERROR) {
 			msgReturnByPrinter="Parameter error";
 		}else if (iRetVal == Printer_GEN.NO_RESPONSE) {
 			msgReturnByPrinter="No response from Pride device";
+			mbsSocket=null;
+			ptrGen=null;
+			mBTDeviceConnected=null;
 		}else if (iRetVal== Printer_GEN.DEMO_VERSION) {
 			msgReturnByPrinter="Library in demo version";
 		}else if (iRetVal==Printer_GEN.INVALID_DEVICE_ID) {
