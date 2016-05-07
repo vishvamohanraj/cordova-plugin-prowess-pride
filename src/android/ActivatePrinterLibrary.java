@@ -7,7 +7,7 @@ import com.prowesspride.api.Setup;
 import android.content.Intent;
 import android.os.Bundle;
 
-public class ActivateLibrary extends CordovaActivity
+public class ActivatePrinterLibrary extends CordovaActivity
 {
 	public static boolean IS_Activate = false;
 	public static Setup setup = null;

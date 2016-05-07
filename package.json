@@ -1,21 +1,30 @@
 {
-    "version": "0.1",
+    "version": "0.0.1",
     "name": "com.vmr.prowess.pride",
     "cordova_name": "Prowess Pride",
     "description": "Prowess Pride",
     "license": "Apache 2.0",
     "repo": "",
     "issue": "",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/vishvamohanraj/cordova-plugin-prowess-pride.git"
+	 },
     "keywords": [
         "cordova",
         "prowess pride",
 		"prowess pride plugin",
 		"prowess pride cordova plugin",
-		"plugin"
+		"plugin",
+		"bluetooth"
     ],
     "platforms": [
         "android",
     ],
     "engines": [],
-    "englishdoc": ""
+    "englishdoc": "","author": "Vishvamohan Raj <vishvamohanraj@gmail.com>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/vishvamohanraj/cordova-plugin-prowess-pride/issues"
+	}
 }

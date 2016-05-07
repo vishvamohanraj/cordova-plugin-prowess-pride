@@ -6,31 +6,33 @@
     <name>ProwessPride</name>
     <description>Pride is an ideal printing solution for applications such as identification,authentication, Micro finance & Micro banking, Public Distribution System, Mobile Point Of Sale, retail and sales automation system, m-Commerce, e-Governance, fleet management, ticketing and many more. APIs for communicating with all the functionalities in Pride forms the major part of the Prowess Pride software development kit. The features exhibited by the SDK for all the modules are made more user friendly and more informative.</description>
     <license>Apache 2.0</license>
-    <keywords>cordova,prowess pride,prowess pride plugin,prowess pride cordova plugin</keywords>
-    <repo></repo>
-    <issue></issue>
+    <keywords>cordova,prowess pride,prowess pride plugin,prowess pride cordova plugin,bluetooth</keywords>
+    <repo>https://github.com/vishvamohanraj/cordova-plugin-prowess-pride.git</repo>
+    <issue>https://github.com/vishvamohanraj/cordova-plugin-prowess-pride/issues</issue>
 
-    <js-module src="www/ProwessPride.js" name="ProwessPride">
+    <js-module src="www/ProwessPride.js" name="ProwessPrideBluetoothPrinter">
         <clobbers target="ProwessPride" />
     </js-module>
 
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="ProwessPride" >
-                <param name="android-package" value="com.vmr.prowess.pride.ProwessPride"/>
+            <feature name="ProwessPrideBluetoothPrinter" >
+                <param name="android-package" value="com.vmr.prowess.pride.ProwessPrideBluetoothPrinter"/>
             </feature>
         </config-file>
-		<config-file target="AndroidManifest.xml" parent="/*">
+		<config-file target="AndroidManifest.xml" parent="/manifest">
 			<uses-permission android:name="android.permission.BLUETOOTH"/>
 			<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+			<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
         </config-file>
 		<config-file target="AndroidManifest.xml" parent="/manifest/application">
-			<activity android:name="com.vmr.prowess.pride.ActivateLibrary" android:label="@string/share_name">
+			<activity android:name="com.vmr.prowess.pride.ActivatePrinterLibrary" android:label="@string/app_name">
             </activity>
 		</config-file>
-        <source-file src="src/android/ProwessPride.java" target-dir="src/com/vmr/prowess/pride" />
-        <source-file src="src/android/ActivateLibrary.java" target-dir="src/com/vmr/prowess/pride" />
+        <source-file src="src/android/ProwessPrideBluetoothPrinter.java" target-dir="src/com/vmr/prowess/pride" />
+        <source-file src="src/android/ActivatePrinterLibrary.java" target-dir="src/com/vmr/prowess/pride" />
+        <source-file src="src/android/BluetoothService.java" target-dir="src/com/vmr/prowess/pride" />
         <source-file src="src/android/libs/ProwessPride_V1.06.jar" target-dir="libs" />
 		<source-file src="raw/licencefull_pride_gen" target-dir="res/raw" />
     </platform>
