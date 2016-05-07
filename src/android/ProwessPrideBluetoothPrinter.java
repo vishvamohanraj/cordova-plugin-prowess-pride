@@ -1,6 +1,7 @@
 package com.vmr.prowess.pride;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -86,7 +87,7 @@ public class ProwessPrideBluetoothPrinter extends CordovaPlugin {
     StringBuffer buffer = new StringBuffer();
     private String delimiter;
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
-
+    private ProgressDialog mProgressDlg;
     @Override
     public boolean execute(String action, CordovaArgs args, CallbackContext callbackContext) throws JSONException {
 
@@ -298,7 +299,10 @@ public class ProwessPrideBluetoothPrinter extends CordovaPlugin {
     }
 
     private void discoverUnpairedDevices(final JSONArray deviceList, final CallbackContext callbackContext) throws JSONException {
-
+    	mProgressDlg = new ProgressDialog(cordova.getActivity());
+    	mProgressDlg.setMessage("Scanning...");
+    	mProgressDlg.setCancelable(false);
+    	mProgressDlg.show();
         final CallbackContext ddc = deviceDiscoveredCallback;
 
         final BroadcastReceiver discoverReceiver = new BroadcastReceiver() {
@@ -321,6 +325,7 @@ public class ProwessPrideBluetoothPrinter extends CordovaPlugin {
                     }
                 } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                     callbackContext.success(deviceList);
+                    mProgressDlg.hide();
                     cordova.getActivity().unregisterReceiver(this);
                 }
             }
@@ -344,7 +349,11 @@ public class ProwessPrideBluetoothPrinter extends CordovaPlugin {
     }
 
     private void connect(CordovaArgs args, boolean secure, CallbackContext callbackContext) throws JSONException {
-        String macAddress = args.getString(0);
+    	mProgressDlg = new ProgressDialog(cordova.getActivity());
+    	mProgressDlg.setMessage("Connecting...");
+    	mProgressDlg.setCancelable(false);
+    	mProgressDlg.show();
+    	String macAddress = args.getString(0);
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(macAddress);
 
         if (device != null) {
@@ -358,6 +367,7 @@ public class ProwessPrideBluetoothPrinter extends CordovaPlugin {
         } else {
             callbackContext.error("Could not connect to " + macAddress);
         }
+        mProgressDlg.hide();
     }
 
     // The Handler that gets information back from the BluetoothSerialService
@@ -484,7 +494,7 @@ public class ProwessPrideBluetoothPrinter extends CordovaPlugin {
 	        			return;
 	        		}
 	        		if (bluetoothSerialService.getState() == BluetoothService.STATE_CONNECTED) {
-	        			ptrGen = new Printer_GEN(ActivatePrinterLibrary.setup, bluetoothSerialService.mmSocket.getOutputStream(), bluetoothSerialService.mmSocket.getInputStream());
+	        			ptrGen = new Printer_GEN(ActivatePrinterLibrary.setup, BluetoothService.mmSocket.getOutputStream(), BluetoothService.mmSocket.getInputStream());
 		        		if(ptrGen!=null)
 		    			{
 		    				ptrGen.iFlushBuf();
@@ -492,13 +502,15 @@ public class ProwessPrideBluetoothPrinter extends CordovaPlugin {
 		    				{
 		    					for(int i=0;i<args.getJSONArray(0).length();i++)
 		    					{
-		    						ptrGen.iAddData((byte) 0x01,args.getString(i));
+		    						Log.v("message actual values", args.getJSONArray(0).length()+"  ==  "+ args.getJSONArray(0).getString(i));
+		    						ptrGen.iAddData((byte) 0x01,args.getJSONArray(0).getString(i));
 		    					}
 		    				}
 		    				ptrGen.iAddData((byte) 0x01, "\n\n\n\n\n");
 		    				int iRetVal= ptrGen.iStartPrinting(1);
 		    				String msgReturnByPrinter=msgReturnByPrinter(iRetVal);
 		    				Toast.makeText(cordova.getActivity().getApplicationContext(), msgReturnByPrinter, Toast.LENGTH_SHORT).show();
+		    				callbackContext.success(msgReturnByPrinter);
 		    			}
 		    			else
 		    			{
@@ -506,9 +518,10 @@ public class ProwessPrideBluetoothPrinter extends CordovaPlugin {
 		    			}
 	                } else {
 	                	ptrGen=null;
-	                    callbackContext.error("Printer not connected.");
+	                    callbackContext.error("Printer not connected");
 	                }
 	    		} catch (Exception e) {
+	    			e.printStackTrace();
 	    			callbackContext.error("Printer not connected");
 	    		}
 	        }

@@ -56,7 +56,7 @@ public class BluetoothService {
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
     
-    public BluetoothSocket mmSocket;
+    public static BluetoothSocket mmSocket;
 
     /**
      * Constructor. Prepares a new BluetoothSerial session.
